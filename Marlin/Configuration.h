@@ -150,6 +150,7 @@
 
 // Name displayed in the LCD "Ready" message and Info menu
 #define CUSTOM_MACHINE_NAME "ANYCUBIC Kossel Luj"
+//#define CONFIGURABLE_MACHINE_NAME // Add G-code M550 to set/report the machine name
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
@@ -721,7 +722,10 @@
 #define PID_K1     0.95   // Smoothing factor within any PID loop
 
 #if ENABLED(PIDTEMP)
-  //#define PID_PARAMS_PER_HOTEND // Uses separate PID parameters for each extruder (useful for mismatched extruders)
+  //#define MIN_POWER 0           // Min power to improve PID stability (0..PID_MAX).
+                                  // Get the power from the temperature report ('M105' => @:nnn) and try P*2-20 to P*2-10.
+  //#define PID_DEBUG             // Print PID debug data to the serial port. Use 'M303 D' to enable/disable.
+  //#define PID_PARAMS_PER_HOTEND // Use separate PID parameters for each extruder (useful for mismatched extruders)
                                   // Set/get with G-code: M301 E[extruder number, 0-2]
 
   // Anycubic Kossel - run 'M106 S255' & 'M303 E0 C10 S200'
@@ -746,6 +750,7 @@
  * Use a physical model of the hotend to control temperature. When configured correctly this gives
  * better responsiveness and stability than PID and removes the need for PID_EXTRUSION_SCALING
  * and PID_FAN_SCALING. Enable MPC_AUTOTUNE and use M306 T to autotune the model.
+ * @section mpc temp
  */
 #if ENABLED(MPCTEMP)
   #define MPC_AUTOTUNE                                // Include a method to do MPC auto-tuning (~6.3K bytes of flash)
@@ -820,7 +825,9 @@
   #define PIDTEMPBED
 #endif
 #if ENABLED(PIDTEMPBED)
-  //#define MIN_BED_POWER 0
+  //#define MIN_BED_POWER 0   // Min power to improve PID stability (0..MAX_BED_POWER).
+                              // Get the power from the temperature report ('M105' => B@:nnn) and try P*2-20 to P*2-10.
+  //#define PID_BED_DEBUG     // Print Bed PID debug data to the serial port. Use 'M303 D' to enable/disable.
 
   // Anycubic Kossel
   // this is for the aluminium bed with a BuildTak-like sticker on it
@@ -835,8 +842,6 @@
     #define DEFAULT_bedKi 72.47
     #define DEFAULT_bedKd 482.59
   #endif
-
-  //#define PID_BED_DEBUG // Print Bed PID debug data to the serial port.
 
   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
 #else
@@ -928,7 +933,6 @@
 // @section pid temp
 
 #if ANY(PIDTEMP, PIDTEMPBED, PIDTEMPCHAMBER)
-  //#define PID_DEBUG             // Sends debug data to the serial port. Use 'M303 D' to toggle activation.
   //#define PID_OPENLOOP          // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
   //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   #define PID_FUNCTIONAL_RANGE 20 // If the temperature difference between the target temperature and the actual temperature
@@ -1058,8 +1062,9 @@
     #define PROBE_MANUALLY_STEP 0.05      // (mm)
   #endif
 
+  // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
   #if ENABLED(ANYCUBIC_KOSSEL_PLUS)
-    // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
+
     #define PRINTABLE_RADIUS       120.0  // (mm)
     // Maximum reachable area
     #define DELTA_MAX_RADIUS       120.0  // (mm)
@@ -1411,7 +1416,8 @@
  * Override with M92 (when enabled below)
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-// variables to calculate steps
+
+// Variables to calculate steps
 #define XYZ_FULL_STEPS_PER_ROTATION 200
 #define XYZ_MICROSTEPS 16
 #define XYZ_BELT_PITCH 2
@@ -1579,6 +1585,12 @@
 #endif
 
 /**
+ * Use the nozzle as the probe, as with a conductive
+ * nozzle system or a piezo-electric smart effector.
+ */
+//#define NOZZLE_AS_PROBE
+
+/**
  * Z Servo Probe, such as an endstop switch on a rotating arm.
  */
 //#define Z_PROBE_SERVO_NR 0
@@ -1641,7 +1653,6 @@
  * For information about this sensor https://github.com/bigtreetech/MicroProbe
  *
  * Also requires PROBE_ENABLE_DISABLE
- * With FT_MOTION requires ENDSTOP_INTERRUPTS_FEATURE
  */
 //#define BIQU_MICROPROBE_V1  // Triggers HIGH
 //#define BIQU_MICROPROBE_V2  // Triggers LOW
@@ -2521,7 +2532,6 @@
   //#define Z_SAFE_HOMING_POINT_ABSOLUTE  // Ignore home offsets (M206) for Z homing position
 #endif
 
-// Homing speeds (linear=mm/min, rotational=°/min)
 // Homing speeds (linear=mm/min, rotational=°/min)
 #define HOMING_FEEDRATE_MM_M { (40*60), (40*60), (40*60) }           //Lujhoming 
 
@@ -3734,9 +3744,11 @@
 // :[1,2,3,4,5,6,7,8]
 //#define NUM_M106_FANS 1
 
-// Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
-// which is not as annoying as with the hardware PWM. On the other hand, if this frequency
-// is too low, you should also increment SOFT_PWM_SCALE.
+/**
+ * Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
+ * which is not as annoying as with the hardware PWM. On the other hand, if this frequency
+ * is too low, you should also increment SOFT_PWM_SCALE.
+ */
 #define FAN_SOFT_PWM
 
 /**
