@@ -187,8 +187,8 @@
 //#define U_DRIVER_TYPE  A4988
 //#define V_DRIVER_TYPE  A4988
 //#define W_DRIVER_TYPE  A4988
-#define E0_DRIVER_TYPE TMC2209_STANDALONE
-//#define E1_DRIVER_TYPE TMC2209_STANDALONE
+#define E0_DRIVER_TYPE A4988
+//#define E1_DRIVER_TYPE A4988
 //#define E2_DRIVER_TYPE A4988
 //#define E3_DRIVER_TYPE A4988
 //#define E4_DRIVER_TYPE A4988
@@ -1758,7 +1758,7 @@
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
-#define INVERT_E0_DIR true   //Luj 31/08/2018  (false cuando instale Extruso BMG 26/12/2019) Hay que invertir para TMC2209
+#define INVERT_E0_DIR false   //Luj 31/08/2018  (false cuando instale Extruso BMG 26/12/2019) Hay que invertir para TMC2209
 #define INVERT_E1_DIR true
 #define INVERT_E2_DIR false
 #define INVERT_E3_DIR false
