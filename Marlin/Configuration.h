@@ -27,16 +27,16 @@
  * Choose your version:
  */
 // normal size or plus?
-#define ANYCUBIC_KOSSEL_PLUS
+//#define ANYCUBIC_KOSSEL_PLUS
 
 // Anycubic Probe version 1 or 2 see README.md; 0 for no probe
-#define ANYCUBIC_PROBE_VERSION 2    //LujSENSORLESS Probe version 3
+#define ANYCUBIC_PROBE_VERSION 3    //LujSENSORLESS Probe version 3
 
 // Heated Bed:
 // 0 ... no heated bed
 // 1 ... aluminium heated bed with "BuildTak-like" sticker
 // 2 ... ultrabase heated bed
-#define ANYCUBIC_KOSSEL_ENABLE_BED 2
+#define ANYCUBIC_KOSSEL_ENABLE_BED 1
 
 /**
  * Configuration.h
@@ -128,7 +128,7 @@
  *
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
-#define BAUDRATE 115200
+#define BAUDRATE 250000
 
 //#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
 
@@ -152,7 +152,7 @@
 //#define BLUETOOTH
 
 // Name displayed in the LCD "Ready" message and Info menu
-#define CUSTOM_MACHINE_NAME "ANYCUBIC Kossel Plus JSE"
+#define CUSTOM_MACHINE_NAME "ANYCUBIC Kossel Luj"
 
 // Printer's unique ID, used by some programs to differentiate between machines.
 // Choose your own or use a service like https://www.uuidgenerator.net/version4
@@ -173,9 +173,9 @@
  *          TMC5130, TMC5130_STANDALONE, TMC5160, TMC5160_STANDALONE
  * :['A4988', 'A5984', 'DRV8825', 'LV8729', 'TB6560', 'TB6600', 'TMC2100', 'TMC2130', 'TMC2130_STANDALONE', 'TMC2160', 'TMC2160_STANDALONE', 'TMC2208', 'TMC2208_STANDALONE', 'TMC2209', 'TMC2209_STANDALONE', 'TMC26X', 'TMC26X_STANDALONE', 'TMC2660', 'TMC2660_STANDALONE', 'TMC5130', 'TMC5130_STANDALONE', 'TMC5160', 'TMC5160_STANDALONE']
  */
-#define X_DRIVER_TYPE  TMC2209_STANDALONE                //LujDriver
-#define Y_DRIVER_TYPE  TMC2209_STANDALONE
-#define Z_DRIVER_TYPE  TMC2209_STANDALONE
+#define X_DRIVER_TYPE  TMC2209                //LujDriver
+#define Y_DRIVER_TYPE  TMC2209
+#define Z_DRIVER_TYPE  TMC2209
 //#define X2_DRIVER_TYPE A4988
 //#define Y2_DRIVER_TYPE A4988
 //#define Z2_DRIVER_TYPE A4988
@@ -188,7 +188,7 @@
 //#define V_DRIVER_TYPE  A4988
 //#define W_DRIVER_TYPE  A4988
 #define E0_DRIVER_TYPE TMC2209_STANDALONE
-//#define E1_DRIVER_TYPE TMC2209_STANDALONE
+#define E1_DRIVER_TYPE TMC2209_STANDALONE
 //#define E2_DRIVER_TYPE A4988
 //#define E3_DRIVER_TYPE A4988
 //#define E4_DRIVER_TYPE A4988
@@ -242,13 +242,13 @@
 
 // This defines the number of extruders
 // :[0, 1, 2, 3, 4, 5, 6, 7, 8]
-#define EXTRUDERS 1
+#define EXTRUDERS 2
 
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
 #define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
 
 // For Cyclops or any "multi-extruder" that shares a single nozzle.
-//#define SINGLENOZZLE
+#define SINGLENOZZLE
 
 // Save and restore temperature and fan speed on tool-change.
 // Set standby for the unselected tool with M104/106/109 T...
@@ -678,9 +678,9 @@
     #define DEFAULT_Ki_LIST {   1.63,   1.63 }
     #define DEFAULT_Kd_LIST {  76.48,  76.48 }
   #else
-    #define DEFAULT_Kp  22.36    //Doc  M301 P22.36 I1.63 D76.48
-    #define DEFAULT_Ki   1.63    //Luj
-    #define DEFAULT_Kd  76.48    //Luj
+    #define DEFAULT_Kp  24.88    //Luj  M301 P24.88 I2.32 D66.76 25/04/2021
+    #define DEFAULT_Ki   2.32    //Luj
+    #define DEFAULT_Kd  66.76    //Luj
   #endif
 #endif
 
@@ -952,31 +952,37 @@
     // Horizontal offset of the universal joints on the carriages.
     #define DELTA_CARRIAGE_OFFSET 20.6    // (mm)
     // Horizontal distance bridged by diagonal push rods when effector is centered.
-    //#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
-    #define DELTA_RADIUS 133.22             // (mm) Get this value from G33 auto calibrate 
+    #define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
   #else
     // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
     #define DELTA_PRINTABLE_RADIUS 90.0   // (mm)
     // Maximum reachable area
     #define DELTA_MAX_RADIUS       90.0   // (mm)
     // Center-to-center distance of the holes in the diagonal push rods.
-    #define DELTA_DIAGONAL_ROD 218.0      // (mm)
+    #define DELTA_DIAGONAL_ROD 217.0      // (mm)     //Luj
     // Horizontal distance bridged by diagonal push rods when effector is centered.
-    #define DELTA_RADIUS 97.0             // (mm) Get this value from G33 auto calibrate
+    #define DELTA_RADIUS 101.10             // (mm) Get this value from G33 auto calibrate
   #endif
 
   // Distance between bed and nozzle Z home position
-  #define DELTA_HEIGHT 275.69             // (mm) Get this value from G33 auto calibrate
+  #define DELTA_HEIGHT 292.16             // (mm) Get this value from G33 auto calibrate
 
-  #define DELTA_ENDSTOP_ADJ { -1.73, -2.29, 0.0 } // Get these values from G33 auto calibrate
-  //20:00:54.153 : echo:  M666 X-1.73 Y-2.29 Z0.00
-  //20:00:54.153 : echo:Delta settings: L<diagonal_rod> R<radius> H<height> S<segments_per_s> B<calibration radius> XYZ<tower angle corrections>
-  //20:00:54.154 : echo:  M665 L267.00 R133.22 H275.69 S80.00 B96.00 X1.13 Y-0.82 Z-0.31
+  #define DELTA_ENDSTOP_ADJ { -0.734, -0.511, 0.0 } // Get these values from G33 auto calibrate
+  //19:02:13.068 : echo:  M666 X-0.29 Y-0.09 Z0.00  sensorless X0.08 Y-0.14 Z0.02    01/03/2022
+  //18:38:31.289 : M666 X-0.251 Y-0.172 Z0.00  sensorless X0.00 Y0.00 Z0.00          21/03/2022
+  //10:58:27.774 : M666 X-0.63 Y-0.36 Z0.00                                          09/10/2022
+  //16:10:30.160 : echo:  M666 X-0.58 Y-0.31 Z0.00                                   18/11/2022
+  //22:18:21.896 : M666 X-0.58 Y-0.36 Z0.00                                          24/01/2023  
 
   // Trim adjustments for individual towers
   // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
   // measured in degrees anticlockwise looking from above the printer
-  #define DELTA_TOWER_ANGLE_TRIM { 1.13, -0.82, -0.31 } // Get these values from G33 auto calibrate
+  #define DELTA_TOWER_ANGLE_TRIM { -0.367,0.183, 0.183 } // Get these values from G33 auto calibrate
+  //19:02:13.068 : echo:  M665 L217.00 R100.92 H293.87 S100.00 X-0.33 Y-0.10 Z0.43 A0.00 B0.00 C0.00   01/03/2022
+  //18:37:01.455 : M665 L217.00 R100.95 H293.89 S100.00 X-0.273 Y0.020 Z0.253 A0.00 B0.00 C0.00        21/03/2022
+  //10:56:44.115 : M665 L217.00 R101.00 H293.56 S100.00 X-0.40 Y0.00 Z0.00 A0.00 B0.00 C0.00           09/10/2022
+  //16:10:30.160 : echo:  M665 L217.00 R101.20 H293.61 S100.00 X-0.55 Y0.00 Z0.00 A0.00 B0.00 C0.00    18/11/2022
+  //22:18:45.379 : M665 L217.00 R101.10 H293.59 S100.00 X-0.55 Y0.00 Z0.00 A0.00 B0.00 C0.00           24/01/2023
 
   // Delta radius and diagonal rod adjustments (mm)
   //#define DELTA_RADIUS_TRIM_TOWER { 0.0, 0.0, 0.0 }
@@ -1177,7 +1183,7 @@
 #define X_MIN_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #define Y_MIN_ENDSTOP_INVERTING false  // Set to true to invert the logic of the endstop.
 #if ANYCUBIC_PROBE_VERSION == 1   // V1 is NO, V2 is NC
-  #define Z_MIN_ENDSTOP_INVERTING true
+  #define Z_MIN_ENDSTOP_INVERTING false
 #else
   #define Z_MIN_ENDSTOP_INVERTING false  //(ANYCUBIC_PROBE_VERSION + 0 == 1) // V1 is NO, V2 is NC   //LujENDSTOP_INVERTING
 #endif
@@ -1196,8 +1202,8 @@
 //#define U_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 //#define V_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
 //#define W_MAX_ENDSTOP_INVERTING false // Set to true to invert the logic of the endstop.
-#define Z_MIN_PROBE_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING      //LujENDSTOP_INVERTING
-//#define Z_MIN_PROBE_ENDSTOP_INVERTING true                           //Lujsensorless_probing
+//#define Z_MIN_PROBE_ENDSTOP_INVERTING Z_MIN_ENDSTOP_INVERTING      //LujENDSTOP_INVERTING
+#define Z_MIN_PROBE_ENDSTOP_INVERTING true                           //Lujsensorless_probing
 
 // Enable this feature if all enabled endstop pins are interrupt-capable.
 // This will remove the need to poll the interrupt pins, saving many CPU cycles.
@@ -1238,7 +1244,7 @@
  * following movement settings. If fewer factors are given than the
  * total number of extruders, the last value applies to the rest.
  */
-//#define DISTINCT_E_FACTORS
+#define DISTINCT_E_FACTORS
 
 /**
  * Default Axis Steps Per Unit (linear=steps/mm, rotational=steps/°)
@@ -1252,18 +1258,23 @@
 #define XYZ_PULLEY_TEETH 20
 
 #define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH)) // 80
-#define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 96 }  // default steps per unit for Kossel (GT2, 20 tooth)
+//#define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 96, 96 }  // default steps per unit for Kossel (GT2, 20 tooth)
+#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80.436, 80.296, 80.39, 409.56, 404.68 }  //Luj
+/**
+ * Enable support for M92. Disable to save at least ~530 bytes of flash.
+ */
+#define EDITABLE_STEPS_PER_UNIT
 
 /**
  * Default Max Feed Rate (linear=mm/s, rotational=°/s)
  * Override with M203
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 100, 100, 100, 100}
+#define DEFAULT_MAX_FEEDRATE          { 100, 100, 100, 100, 100 }		//Luj antes { 500, 500, 500, 200, 200 }
 
 //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
 #if ENABLED(LIMITED_MAX_FR_EDITING)
-  #define MAX_FEEDRATE_EDIT_VALUES    { 600, 600, 10, 50 } // ...or, set your own edit limits
+  #define MAX_FEEDRATE_EDIT_VALUES    { 600, 600, 10, 50,50 } // ...or, set your own edit limits
 #endif
 
 /**
@@ -1272,11 +1283,11 @@
  * Override with M201
  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
  */
-#define DEFAULT_MAX_ACCELERATION       { 3000, 3000, 3000, 3000 }
+#define DEFAULT_MAX_ACCELERATION       { 3000, 3000, 3000, 3000, 3000 }  //Luj
 
 //#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
 #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
-  #define MAX_ACCEL_EDIT_VALUES       { 6000, 6000, 3000, 20000 } // ...or, set your own edit limits
+  #define MAX_ACCEL_EDIT_VALUES       { 6000, 6000, 3000, 20000, 20000 } // ...or, set your own edit limits
 #endif
 
 /**
@@ -1315,7 +1326,7 @@
 
   //#define LIMITED_JERK_EDITING        // Limit edit via M205 or LCD to DEFAULT_aJERK * 2
   #if ENABLED(LIMITED_JERK_EDITING)
-    #define MAX_JERK_EDIT_VALUES { 20, 20, 0.6, 10 } // ...or, set your own edit limits
+    #define MAX_JERK_EDIT_VALUES { 20, 20, 0.6, 10, 10 } // ...or, set your own edit limits
   #endif
 #endif
 
@@ -1591,13 +1602,13 @@
 #define PROBING_MARGIN 15
 
 // X and Y axis travel speed (mm/min) between probes
-#define XY_PROBE_FEEDRATE (16*60)
+#define XY_PROBE_FEEDRATE (60*60)             //Lujprobing
 
 // Feedrate (mm/min) for the first approach when double-probing (MULTIPLE_PROBING == 2)
-#define Z_PROBE_FEEDRATE_FAST (50*60)
+#define Z_PROBE_FEEDRATE_FAST (40*60)         //Lujprobing   Si es posible igualar a HOMING_FEEDRATE_MM_M con SENSORLESS_HOMING/PROBING         
 
 // Feedrate (mm/min) for the "accurate" probe of each point
-#define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 3)
+#define Z_PROBE_FEEDRATE_SLOW (Z_PROBE_FEEDRATE_FAST / 1)     //Lujprobing reducido de 3 a 1 para aumentar la velocidad durante probe
 
 /**
  * Probe Activation Switch
@@ -1644,8 +1655,8 @@
  * A total of 2 does fast/slow probes with a weighted average.
  * A total of 3 or more adds more slow probes, taking the average.
  */
-#define MULTIPLE_PROBING 3
-#define EXTRA_PROBING    1
+#define MULTIPLE_PROBING 3        //Lujprobing
+//#define EXTRA_PROBING    1
 
 /**
  * Z probes require clearance when deploying, stowing, and moving between
@@ -2203,7 +2214,7 @@
 
 // Homing speeds (linear=mm/min, rotational=°/min)
 // Homing speeds (linear=mm/min, rotational=°/min)
-#define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (50*60) }
+#define HOMING_FEEDRATE_MM_M { (40*60), (40*60), (40*60) }           //Lujhoming 
 
 // Validate that endstops are triggered on homing moves
 #define VALIDATE_HOMING_ENDSTOPS
@@ -2321,7 +2332,7 @@
 //
 #define PREHEAT_1_LABEL       "PLA"
 #define PREHEAT_1_TEMP_HOTEND 190
-#define PREHEAT_1_TEMP_BED     45
+#define PREHEAT_1_TEMP_BED     55
 #define PREHEAT_1_TEMP_CHAMBER 35
 #define PREHEAT_1_FAN_SPEED   255 // Value from 0 to 255
 
