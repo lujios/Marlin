@@ -642,22 +642,10 @@ bool Probe::probe_down_to_z(const_float_t z, const_feedRate_t fr_mm_s) {
       if (test_sensitivity.x) stealth_states.x = tmc_enable_stallguard(stepperX); // Delta watches all DIAG pins for a stall
       if (test_sensitivity.y) stealth_states.y = tmc_enable_stallguard(stepperY);
     #endif
-    if (test_sensitivity.z) {
-      stealth_states.z = tmc_enable_stallguard(stepperZ);                         // All machines will check Z-DIAG for stall
-      #if ENABLED(Z_MULTI_ENDSTOPS)
-        stealth_states.z2 = tmc_enable_stallguard(stepperZ2);
-        #if NUM_Z_STEPPERS >= 3
-          stealth_states.z3 = tmc_enable_stallguard(stepperZ3);
-          #if NUM_Z_STEPPERS >= 4
-            stealth_states.z4 = tmc_enable_stallguard(stepperZ4);
-          #endif
-        #endif
-      #endif
-    }
-    TERN_(IMPROVE_HOMING_RELIABILITY, planner.enable_stall_prevention(true));
-
+    if (test_sensitivity.z) stealth_states.z = tmc_enable_stallguard(stepperZ);   // All machines will check Z-DIAG for stall
+    endstops.set_homing_current(true);                                            // The "homing" current also applies to probing
     endstops.enable(true);
-  #endif // SENSORLESS_PROBING
+  #endif
 
   TERN_(HAS_QUIET_PROBING, set_probing_paused(true));
 
@@ -678,6 +666,11 @@ bool Probe::probe_down_to_z(const_float_t z, const_feedRate_t fr_mm_s) {
     if (probe_triggered) refresh_largest_sensorless_adj();
   #endif
 
+  // Offset sensorless probing
+  #if HAS_DELTA_SENSORLESS_PROBING
+    if (probe_triggered) probe.refresh_largest_sensorless_adj();
+  #endif
+
   TERN_(HAS_QUIET_PROBING, set_probing_paused(false));
 
   // Re-enable stealthChop if used. Disable diag1 pin on driver.
@@ -687,20 +680,9 @@ bool Probe::probe_down_to_z(const_float_t z, const_feedRate_t fr_mm_s) {
       if (test_sensitivity.x) tmc_disable_stallguard(stepperX, stealth_states.x);
       if (test_sensitivity.y) tmc_disable_stallguard(stepperY, stealth_states.y);
     #endif
-    if (test_sensitivity.z) {
-      tmc_disable_stallguard(stepperZ, stealth_states.z);
-      #if ENABLED(Z_MULTI_ENDSTOPS)
-        tmc_disable_stallguard(stepperZ2, stealth_states.z2);
-        #if NUM_Z_STEPPERS >= 3
-          tmc_disable_stallguard(stepperZ3, stealth_states.z3);
-          #if NUM_Z_STEPPERS >= 4
-            tmc_disable_stallguard(stepperZ4, stealth_states.z4);
-          #endif
-        #endif
-      #endif
-    }
-    TERN_(IMPROVE_HOMING_RELIABILITY, planner.enable_stall_prevention(false));
-  #endif // SENSORLESS_PROBING
+    if (test_sensitivity.z) tmc_disable_stallguard(stepperZ, stealth_states.z);
+    endstops.set_homing_current(false);
+  #endif
 
   #if ENABLED(BLTOUCH)
     if (probe_triggered && !bltouch.high_speed_mode && bltouch.stow())
@@ -818,8 +800,8 @@ float Probe::run_z_probe(const bool sanity_check/*=true*/, const_float_t z_min_p
     // Do a first probe at the fast speed
     if (try_to_probe(PSTR("FAST"), z_probe_low_point, z_probe_fast_mm_s, sanity_check)) return NAN;
 
-    const float z1 = DIFF_TERN(HAS_DELTA_SENSORLESS_PROBING, current_position.z, largest_sensorless_adj);
-    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("1st Probe Z:", z1);
+    const float first_probe_z = DIFF_TERN(HAS_DELTA_SENSORLESS_PROBING, current_position.z, largest_sensorless_adj);
+    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("1st Probe Z:", first_probe_z);
 
     // Raise to give the probe clearance
     do_z_clearance(z1 + (Z_CLEARANCE_MULTI_PROBE), false);
@@ -1030,50 +1012,8 @@ float Probe::probe_at_point(
       // which the following deploy will handle.
       if (bltouch.triggered()) bltouch._reset();
     #endif
-
-    measured_z = deploy() ? NAN : run_z_probe(sanity_check, z_min_point, z_clearance) + offset.z;
-
-    // Deploy succeeded and a successful measurement was done.
-    // Raise and/or stow the probe depending on 'raise_after' and settings.
-    if (!isnan(measured_z)) {
-      switch (raise_after) {
-        default: break;
-        case PROBE_PT_RAISE:
-          if (raise_after_is_rel)
-            do_z_clearance_by(z_clearance);
-          else
-            do_z_clearance(z_clearance);
-          break;
-        case PROBE_PT_STOW: case PROBE_PT_LAST_STOW:
-          if (stow()) measured_z = NAN;   // Error on stow?
-          break;
-      }
-    }
-
-    // If any error occurred stow the probe and set an alert
-    if (isnan(measured_z)) {
-      // TODO: Disable steppers (unless G29_RETRY_AND_RECOVER or G29_HALT_ON_FAILURE are set).
-      // Something definitely went wrong at this point, so it might be a good idea to release the steppers.
-      // The user may want to quickly move the carriage or bed by hand to avoid bed damage from the (hot) nozzle.
-      // This would also benefit from the contemplated "Audio Alerts" feature.
-      stow();
-      LCD_MESSAGE(MSG_LCD_PROBING_FAILED);
-      #if DISABLED(G29_RETRY_AND_RECOVER)
-        SERIAL_ERROR_MSG(STR_ERR_PROBING_FAILED);
-      #endif
-    }
-    else {
-      TERN_(HAS_PTC, ptc.apply_compensation(measured_z));
-      TERN_(X_AXIS_TWIST_COMPENSATION, measured_z += xatc.compensation(npos + offset_xy));
-      if (verbose_level > 2 || DEBUGGING(LEVELING))
-        SERIAL_ECHOLNPGM("Bed X: ", LOGICAL_X_POSITION(rx), " Y: ", LOGICAL_Y_POSITION(ry), " Z: ", measured_z);
-    }
-
-  #endif // !BD_SENSOR
-
-  // Restore the Z homing current
-  TERN_(PROBING_USE_CURRENT_HOME, restore_homing_current(Z_AXIS));
-
+  }
+  DEBUG_ECHOLNPGM("measured_z: ", measured_z);
   return measured_z;
 }
 
@@ -1128,6 +1068,44 @@ float Probe::probe_at_point(
     }
   }
 
-#endif
+  /**
+   * Set the sensorless Z offset
+   */
+  void Probe::set_offset_sensorless_adj(const_float_t sz) {
+    #if ENABLED(SENSORLESS_PROBING)
+      DEBUG_SECTION(pso, "Probe::set_offset_sensorless_adj", true);
+      #if HAS_DELTA_SENSORLESS_PROBING
+        if (test_sensitivity.x) offset_sensorless_adj.a = sz;
+        if (test_sensitivity.y) offset_sensorless_adj.b = sz;
+      #endif
+      if (test_sensitivity.z) offset_sensorless_adj.c = sz;
+    #endif
+  }
+
+  /**
+   * Refresh largest_sensorless_adj based on triggered endstops
+   */
+  void Probe::refresh_largest_sensorless_adj() {
+    #if ENABLED(SENSORLESS_PROBING)
+      DEBUG_SECTION(rso, "Probe::refresh_largest_sensorless_adj", true);
+      largest_sensorless_adj = -3;                                             // A reference away from any real probe height
+      #if HAS_DELTA_SENSORLESS_PROBING
+        if (TEST(endstops.state(), X_MAX)) {
+          NOLESS(largest_sensorless_adj, offset_sensorless_adj.a);
+          DEBUG_ECHOLNPGM("Endstop_X: ", largest_sensorless_adj, " TowerX");
+        }
+        if (TEST(endstops.state(), Y_MAX)) {
+          NOLESS(largest_sensorless_adj, offset_sensorless_adj.b);
+          DEBUG_ECHOLNPGM("Endstop_Y: ", largest_sensorless_adj, " TowerY");
+        }
+      #endif
+      if (TEST(endstops.state(), Z_MAX)) {
+        NOLESS(largest_sensorless_adj, offset_sensorless_adj.c);
+        DEBUG_ECHOLNPGM("Endstop_Z: ", largest_sensorless_adj, " TowerZ");
+      }
+    #endif
+  }
+
+#endif // SENSORLESS_PROBING || SENSORLESS_HOMING
 
 #endif // HAS_BED_PROBE

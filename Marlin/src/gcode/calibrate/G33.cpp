@@ -63,9 +63,9 @@ float lcd_probe_pt(const xy_pos_t &xy);
 
 void ac_home() {
   endstops.enable(true);
-  TERN_(IMPROVE_HOMING_RELIABILITY, planner.enable_stall_prevention(true));
+  TERN_(SENSORLESS_HOMING, endstops.set_homing_current(true));
   home_delta();
-  TERN_(IMPROVE_HOMING_RELIABILITY, planner.enable_stall_prevention(false));
+  TERN_(SENSORLESS_HOMING, endstops.set_homing_current(false));
   endstops.not_homing();
 }
 
@@ -377,13 +377,15 @@ static float auto_tune_a(const float dcr) {
  *
  *   O<bool>  Probe at probe-offset-relative positions instead of the required kinematic points
  *
- *   With HAS_DELTA_SENSORLESS_PROBING:
- *     Use these flags to calibrate stall sensitivity:
- *     Example: G33 P1 Y Z - to calibrate X only
- *     X  Don't activate stallguard on X
- *     Y  Don't activate stallguard on Y
- *     Z  Don't activate stallguard on Z
- *     S  Save offset_sensorless_adj
+ *   O   Probe at offsetted probe positions (this is wrong but it seems to work)
+ *
+ * With SENSORLESS_PROBING:
+ *   Use these flags to calibrate stall sensitivity: (e.g., `G33 P1 Y Z` to calibrate X only.)
+ *   X   Don't activate stallguard on X.
+ *   Y   Don't activate stallguard on Y.
+ *   Z   Don't activate stallguard on Z.
+ *
+ *   S   Save offset_sensorless_adj
  */
 void GcodeSuite::G33() {
 
@@ -404,7 +406,7 @@ void GcodeSuite::G33() {
     const float total_offset = HYPOT(probe.offset_xy.x, probe.offset_xy.y);
     dcr -= probe_at_offset ? _MAX(total_offset, PROBING_MARGIN) : total_offset;
   #endif
-  NOMORE(dcr, PRINTABLE_RADIUS);
+  NOMORE(dcr, DELTA_PRINTABLE_RADIUS);
   if (parser.seenval('R')) dcr -= _MAX(parser.value_float(), 0.0f);
   TERN_(HAS_DELTA_SENSORLESS_PROBING, dcr *= sensorless_radius_factor);
 
@@ -429,7 +431,7 @@ void GcodeSuite::G33() {
   const bool stow_after_each = parser.seen_test('E');
 
   #if HAS_DELTA_SENSORLESS_PROBING
-    probe.test_sensitivity = { !parser.seen_test('X'), !parser.seen_test('Y'), !parser.seen_test('Z') };
+    probe.test_sensitivity.set(!parser.seen_test('X'), !parser.seen_test('Y'), !parser.seen_test('Z'));
     const bool do_save_offset_adj = parser.seen_test('S');
   #endif
 
@@ -471,7 +473,8 @@ void GcodeSuite::G33() {
   #if HAS_DELTA_SENSORLESS_PROBING
     if (verbose_level > 0 && do_save_offset_adj) {
       offset_sensorless_adj.reset();
-      auto caltower = [&](Probe::sense_bool_t s) {
+
+      auto caltower = [&](Probe::sense_bool_t s){
         float z_at_pt[NPP + 1];
         LOOP_CAL_ALL(rad) z_at_pt[rad] = 0.0f;
         probe.test_sensitivity = s;
@@ -482,11 +485,11 @@ void GcodeSuite::G33() {
       caltower({ false, true, false }); // B
       caltower({ false, false, true }); // C
 
-      probe.test_sensitivity = { true, true, true }; // Reset to all
+      probe.test_sensitivity = { true, true, true }; // reset to all
     }
   #endif
 
-  do { // Start iterations
+  do { // start iterations
 
     float z_at_pt[NPP + 1] = { 0.0f };
 

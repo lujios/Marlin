@@ -306,6 +306,38 @@ void GcodeSuite::G28() {
       #endif
       tool_change(0, true);
     #endif
+    #if HAS_CURRENT_HOME(I)
+      const int16_t tmc_save_current_I = stepperI.getMilliamps();
+      stepperI.rms_current(I_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_I), tmc_save_current_I, I_CURRENT_HOME);
+    #endif
+    #if HAS_CURRENT_HOME(J)
+      const int16_t tmc_save_current_J = stepperJ.getMilliamps();
+      stepperJ.rms_current(J_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_J), tmc_save_current_J, J_CURRENT_HOME);
+    #endif
+    #if HAS_CURRENT_HOME(K)
+      const int16_t tmc_save_current_K = stepperK.getMilliamps();
+      stepperK.rms_current(K_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_K), tmc_save_current_K, K_CURRENT_HOME);
+    #endif
+    #if HAS_CURRENT_HOME(U)
+      const int16_t tmc_save_current_U = stepperU.getMilliamps();
+      stepperU.rms_current(U_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_U), tmc_save_current_U, U_CURRENT_HOME);
+    #endif
+    #if HAS_CURRENT_HOME(V)
+      const int16_t tmc_save_current_V = stepperV.getMilliamps();
+      stepperV.rms_current(V_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_V), tmc_save_current_V, V_CURRENT_HOME);
+    #endif
+    #if HAS_CURRENT_HOME(W)
+      const int16_t tmc_save_current_W = stepperW.getMilliamps();
+      stepperW.rms_current(W_CURRENT_HOME);
+      if (DEBUGGING(LEVELING)) debug_current(F(STR_W), tmc_save_current_W, W_CURRENT_HOME);
+    #endif
+    safe_delay(SENSORLESS_STALLGUARD_DELAY); // Short delay needed to settle
+  #endif
 
     TERN_(HAS_DUPLICATION_MODE, set_duplication_enabled(false));
 
@@ -573,7 +605,94 @@ void GcodeSuite::G28() {
     if (ENABLED(NANODLP_Z_SYNC) && (ENABLED(NANODLP_ALL_AXIS) || TERN0(HAS_Z_AXIS, doZ)))
       SERIAL_ECHOLNPGM(STR_Z_MOVE_COMP);
 
-  #endif // NUM_AXES
+  /**
+   * Preserve DXC mode across a G28 for IDEX printers in DXC_DUPLICATION_MODE.
+   * This is important because it lets a user use the LCD Panel to set an IDEX Duplication mode, and
+   * then print a standard GCode file that contains a single print that does a G28 and has no other
+   * IDEX specific commands in it.
+   */
+  #if ENABLED(DUAL_X_CARRIAGE)
+
+    if (idex_is_duplicating()) {
+
+      TERN_(IMPROVE_HOMING_RELIABILITY, saved_motion_state = begin_slow_homing());
+
+      // Always home the 2nd (right) extruder first
+      active_extruder = 1;
+      homeaxis(X_AXIS);
+
+      // Remember this extruder's position for later tool change
+      inactive_extruder_x = current_position.x;
+
+      // Home the 1st (left) extruder
+      active_extruder = 0;
+      homeaxis(X_AXIS);
+
+      // Consider the active extruder to be parked
+      idex_set_parked();
+
+      dual_x_carriage_mode = IDEX_saved_mode;
+      set_duplication_enabled(IDEX_saved_duplication_state);
+
+      TERN_(IMPROVE_HOMING_RELIABILITY, end_slow_homing(saved_motion_state));
+    }
+
+  #endif // DUAL_X_CARRIAGE
+
+  endstops.not_homing();
+
+  // Clear endstop state for polled stallGuard endstops
+  TERN_(SPI_ENDSTOPS, endstops.clear_endstop_state());
+
+  // Move to a height where we can use the full xy-area
+  TERN_(DELTA_HOME_TO_SAFE_ZONE, do_blocking_move_to_z(delta_clip_start_height));
+
+  TERN_(CAN_SET_LEVELING_AFTER_G28, if (leveling_restore_state) set_bed_leveling_enabled());
+
+  restore_feedrate_and_scaling();
+
+  // Restore the active tool after homing
+  #if HAS_MULTI_HOTEND && (DISABLED(DELTA) || ENABLED(DELTA_HOME_TO_SAFE_ZONE))
+    tool_change(old_tool_index, TERN(PARKING_EXTRUDER, !pe_final_change_must_unpark, DISABLED(DUAL_X_CARRIAGE)));   // Do move if one of these
+  #endif
+
+  #if HAS_HOMING_CURRENT
+    if (DEBUGGING(LEVELING)) DEBUG_ECHOLNPGM("Restore driver current...");
+    #if HAS_CURRENT_HOME(X)
+      stepperX.rms_current(tmc_save_current_X);
+    #endif
+    #if HAS_CURRENT_HOME(X2)
+      stepperX2.rms_current(tmc_save_current_X2);
+    #endif
+    #if HAS_CURRENT_HOME(Y)
+      stepperY.rms_current(tmc_save_current_Y);
+    #endif
+    #if HAS_CURRENT_HOME(Y2)
+      stepperY2.rms_current(tmc_save_current_Y2);
+    #endif
+    #if HAS_CURRENT_HOME(Z) && ENABLED(DELTA)
+      stepperZ.rms_current(tmc_save_current_Z);
+    #endif
+    #if HAS_CURRENT_HOME(I)
+      stepperI.rms_current(tmc_save_current_I);
+    #endif
+    #if HAS_CURRENT_HOME(J)
+      stepperJ.rms_current(tmc_save_current_J);
+    #endif
+    #if HAS_CURRENT_HOME(K)
+      stepperK.rms_current(tmc_save_current_K);
+    #endif
+    #if HAS_CURRENT_HOME(U)
+      stepperU.rms_current(tmc_save_current_U);
+    #endif
+    #if HAS_CURRENT_HOME(V)
+      stepperV.rms_current(tmc_save_current_V);
+    #endif
+    #if HAS_CURRENT_HOME(W)
+      stepperW.rms_current(tmc_save_current_W);
+    #endif
+    safe_delay(SENSORLESS_STALLGUARD_DELAY); // Short delay needed to settle
+  #endif // HAS_HOMING_CURRENT
 
   ui.refresh();
 

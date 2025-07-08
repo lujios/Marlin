@@ -214,7 +214,7 @@ void DGUSScreenHandlerMKS::sendTMCSensValue(DGUS_VP_Variable &var) {
       } break;
 
       case 1: // Pause
-        gotoScreen(MKSLCD_SCREEN_PAUSE);
+        GotoScreen(MKSLCD_SCREEN_PAUSE);
         if (!ExtUI::isPrintingFromMediaPaused()) {
           nozzle_park_mks.print_pause_start_flag = 1;
           nozzle_park_mks.blstatus = true;
