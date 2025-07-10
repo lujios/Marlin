@@ -678,9 +678,13 @@
     #define DEFAULT_Ki_LIST {   1.63,   1.63 }
     #define DEFAULT_Kd_LIST {  76.48,  76.48 }
   #else
-    #define DEFAULT_Kp  22.36    //Doc  M301 P22.36 I1.63 D76.48
-    #define DEFAULT_Ki   1.63    //Luj
-    #define DEFAULT_Kd  76.48    //Luj
+    //#define DEFAULT_Kp  22.36    //Doc  M301 P22.36 I1.63 D76.48
+    //#define DEFAULT_Ki   1.63    //Luj  PID autotune M303 E0 C8 S185
+    //#define DEFAULT_Kd  76.48    //Luj    Resultado: M301 P20.23 I1.59 D64.22
+    #define DEFAULT_Kp 20.23
+    #define DEFAULT_Ki 1.59
+    #define DEFAULT_Kd 64.22
+
   #endif
 #endif
 
@@ -768,9 +772,14 @@
     #define  DEFAULT_bedKd 363.81
   #elif ANYCUBIC_KOSSEL_ENABLE_BED == 2
     // TODO get real PID values for Ultrabase Bed
-    #define DEFAULT_bedKp 374.03
-    #define DEFAULT_bedKi 72.47
-    #define DEFAULT_bedKd 482.59
+    //#define DEFAULT_bedKp 374.03  //Lujdoc M303 E-1 C8 S55
+    //#define DEFAULT_bedKi 72.47   //  Resultado: M304 P95.34 I17.90 D338.46
+    //#define DEFAULT_bedKd 482.59  //
+    #define DEFAULT_bedKp 95.34
+    #define DEFAULT_bedKi 17.90
+    #define DEFAULT_bedKd 338.46
+
+
   #endif
 
   //#define PID_BED_DEBUG // Print Bed PID debug data to the serial port.
@@ -953,7 +962,7 @@
     #define DELTA_CARRIAGE_OFFSET 20.6    // (mm)
     // Horizontal distance bridged by diagonal push rods when effector is centered.
     //#define DELTA_RADIUS (DELTA_SMOOTH_ROD_OFFSET-(DELTA_EFFECTOR_OFFSET)-(DELTA_CARRIAGE_OFFSET))          // (mm) Get this value from G33 auto calibrate
-    #define DELTA_RADIUS 133.22             // (mm) Get this value from G33 auto calibrate 
+    #define DELTA_RADIUS 132.90             // (mm) Get this value from G33 auto calibrate 
   #else
     // Print surface diameter/2 minus unreachable space (avoid collisions with vertical towers).
     #define DELTA_PRINTABLE_RADIUS 90.0   // (mm)
@@ -966,12 +975,13 @@
   #endif
 
   // Distance between bed and nozzle Z home position
-  #define DELTA_HEIGHT 275.69             // (mm) Get this value from G33 auto calibrate
+  #define DELTA_HEIGHT 278.20             // (mm) Get this value from G33 auto calibrate
 
-  #define DELTA_ENDSTOP_ADJ { -1.73, -2.29, 0.0 } // Get these values from G33 auto calibrate
-  //20:00:54.153 : echo:  M666 X-1.73 Y-2.29 Z0.00
-  //20:00:54.153 : echo:Delta settings: L<diagonal_rod> R<radius> H<height> S<segments_per_s> B<calibration radius> XYZ<tower angle corrections>
-  //20:00:54.154 : echo:  M665 L267.00 R133.22 H275.69 S80.00 B96.00 X1.13 Y-0.82 Z-0.31
+  #define DELTA_ENDSTOP_ADJ { -1.65, -2.13, 0.0 } // Get these values from G33 auto calibrate
+  //18:38:44.376 : echo:; Delta (L<diagonal-rod> R<radius> H<height> S<seg-per-sec> XYZ<tower-angle-trim> ABC<rod-trim>):
+  //18:38:44.376 : echo:  M665 L267.00 R132.90 H278.20 S100.00 X1.13 Y-0.82 Z-0.31 A0.00 B0.00 C0.00
+  //18:38:44.376 : echo:; Endstop adjustment:
+  //18:38:44.376 : echo:  M666 X-1.65 Y-2.13 Z0.00
 
   // Trim adjustments for individual towers
   // tower angle corrections for X and Y tower / rotate XYZ so Z tower angle = 0
@@ -1252,9 +1262,10 @@
 #define XYZ_PULLEY_TEETH 20
 
 #define DEFAULT_XYZ_STEPS_PER_UNIT ((XYZ_FULL_STEPS_PER_ROTATION) * (XYZ_MICROSTEPS) / double(XYZ_BELT_PITCH) / double(XYZ_PULLEY_TEETH)) // 80
-//20:00:54.037 : echo:  M92 X80.16 Y80.16 Z80.16 E404.37
+//18:38:44.327 : echo:; Steps per unit:
+//18:38:44.327 : echo:  M92 X80.34 Y80.58 Z80.45 E404.70
 //#define DEFAULT_AXIS_STEPS_PER_UNIT   { DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, DEFAULT_XYZ_STEPS_PER_UNIT, 96 }  // default steps per unit for Kossel (GT2, 20 tooth)
-#define DEFAULT_AXIS_STEPS_PER_UNIT {80.16, 80.16, 80.16, 404.37}  //Luj
+#define DEFAULT_AXIS_STEPS_PER_UNIT {80.34, 80.58, 80.45, 404.70}  //Luj
 /**
  * Default Max Feed Rate (linear=mm/s, rotational=°/s)
  * Override with M203
